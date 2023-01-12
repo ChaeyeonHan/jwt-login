@@ -1,6 +1,5 @@
 package com.study.jwtlogin.jwt;
 
-import com.study.jwtlogin.domain.User;
 import com.study.jwtlogin.dto.TokenRes;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
@@ -9,17 +8,26 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.User;
 import org.springframework.stereotype.Component;
 
 import java.security.Key;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.Date;
+import java.util.stream.Collectors;
+
+import static com.study.jwtlogin.domain.Role.ROLE_USER;
 
 // JWT 토큰 암호화, 복호화, 유효성 검증을 하는 역할
 
 @Slf4j
 @Component
 public class TokenProvider {
+
+    private static final String AUTHORITIES_KEY = "auth";
 
     private Key secretKey;
 
@@ -46,9 +54,10 @@ public class TokenProvider {
     public String publishAccessToken(String email) {
         Date now = new Date();
         return Jwts.builder()
-                .setHeaderParam("type", "jwt")
-                .claim("email", email)
-                .setIssuedAt(now)
+//                .setHeaderParam("type", "jwt")
+                .setSubject(email)
+                .claim(AUTHORITIES_KEY, ROLE_USER)
+//                .setIssuedAt(now)
                 .setExpiration(new Date(now.getTime() + JwtProperties.ACCESS_TOKEN_EXPIRE_TIME))  // 토큰 만료 시간 설정(1000이 1초)
 //                .signWith(SignatureAlgorithm.HS256, JwtProperties.SECRET)  // 내 서버만 아는 고유한 값
                 // -> signWith가 deprecated되어 String 값을 넣는 것이 아니라 Key를 생성해 서명을 진행
@@ -88,16 +97,22 @@ public class TokenProvider {
 
         Claims claims = parseClaims(accessToken);
 
-        if (claims.get("email") == null) {
+        if (claims.get(AUTHORITIES_KEY) == null) {
             throw new RuntimeException("권한 정보가 없는 토큰입니다.");
         }
+
+        // Claim 으로 권한 정보 가져오기
+        Collection<? extends GrantedAuthority> authorities =
+                Arrays.stream(claims.get(AUTHORITIES_KEY).toString().split(","))
+                        .map(SimpleGrantedAuthority::new)
+                        .collect(Collectors.toList());
 
         // 권한 정보 넣지 않고 Authentication 객체 생성해 리턴하는게 맞나?
         // UserDetails 객체를 생성해서 UsernamePasswordAuthenticationToken로 리턴(SecurityContext가 Authentication 객체를 저장하기에)
         // 디비를 거치지 않고 토큰에서 값을 꺼내 바로 시큐리티 유저 객체를 만들어 Authentication을 만들어 반환
-        UserDetails principal = new User();
-        return new UsernamePasswordAuthenticationToken(principal,"",null);
+        User principal = new User(claims.getSubject(), "", authorities);  // UserDetails 객체를 생성 -> UsernamePasswordAuthenticationToken 형태로 리턴
 
+        return new UsernamePasswordAuthenticationToken(principal,"",authorities);
     }
 
     // 토큰을 파라미터로 받아 클레임 생성 (토큰의 만료 여부와 상관없이 정보를 꺼낼 수 있음)

@@ -27,10 +27,11 @@ public class UserService {
 
         userRepository.save(User.builder()
                 .email(joinRequestDto.getEmail())
-                .password(passwordEncoder.encode(joinRequestDto.getPassword()))
+                .pw(passwordEncoder.encode(joinRequestDto.getPassword()))
                 .loginType(LoginType.FORM)
                 .role(Role.ROLE_USER)
-                .activated(true).build());
+                .activated(true)
+                .build());
 
         System.out.println(joinRequestDto.getEmail() + " : 해당 유저 가입 완료");
         return LoginRes.builder()

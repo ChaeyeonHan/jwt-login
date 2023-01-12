@@ -1,13 +1,11 @@
 package com.study.jwtlogin.domain;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import javax.persistence.*;
+import java.util.ArrayList;
 import java.util.Collection;
 
 @NoArgsConstructor
@@ -36,7 +34,7 @@ public class User extends BaseTimeEntity implements UserDetails {
     private String email;
 
     @Column(name = "pw")
-    private String password;
+    private String pw;
 
     @Column(name = "activated")
     private boolean activated;
@@ -45,8 +43,19 @@ public class User extends BaseTimeEntity implements UserDetails {
     // UserDetails 상속 //
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return null;
+        Collection<GrantedAuthority> authorities = new ArrayList<>();
+        authorities.add(() -> {
+            return getRole().toString();
+        });
+        return authorities;
     }
+
+    @Override
+    public String getPassword() {
+//        return null;
+        return getPw();
+    }
+
 
     @Override
     public String getUsername() {
@@ -72,4 +81,6 @@ public class User extends BaseTimeEntity implements UserDetails {
     public boolean isEnabled() {
         return false;
     }
+
+
 }

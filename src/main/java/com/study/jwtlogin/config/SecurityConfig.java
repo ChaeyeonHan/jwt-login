@@ -74,7 +74,7 @@ public class SecurityConfig {
                 .antMatchers("/", "/h2/**", "/auth/**").permitAll()
                 .anyRequest().authenticated()
 
-                // JwtFilter를
+
                 .and()
                 .apply(new JwtSecurityConfig(tokenProvider));
 
