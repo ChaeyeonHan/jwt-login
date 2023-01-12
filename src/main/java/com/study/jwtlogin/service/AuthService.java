@@ -1,13 +1,17 @@
 package com.study.jwtlogin.service;
 
 import com.study.jwtlogin.domain.RefreshToken;
+import com.study.jwtlogin.dto.LoginRequestDto;
 import com.study.jwtlogin.dto.TokenRequestDto;
 import com.study.jwtlogin.dto.TokenRes;
 import com.study.jwtlogin.jwt.TokenProvider;
 import com.study.jwtlogin.repository.RefreshTokenRepository;
 import lombok.RequiredArgsConstructor;
 import net.bytebuddy.implementation.bind.annotation.RuntimeType;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,6 +21,36 @@ public class AuthService {
 
     private final TokenProvider tokenProvider;
     private final RefreshTokenRepository refreshTokenRepository;
+    private final AuthenticationManagerBuilder authenticationManagerBuilder;
+
+
+    @Transactional
+    public TokenRes login(LoginRequestDto loginRequestDto) {
+        // 1. 로그인한 email/password 를 기반으로 AuthenticationToken 생성
+        UsernamePasswordAuthenticationToken authenticationToken = loginRequestDto.toAuthenticate();
+        System.out.println("UsernamePasswordAuthenticationToken");
+
+        // 2. 사용자 비밀번호 체크가 진행된다.(여기서 loadUserByUsername 메소드가 실행된다)
+        // UsernamePasswordAuthenticationToken 객체로 Authentication 객체 생성
+        Authentication authentication = authenticationManagerBuilder.getObject().authenticate(authenticationToken);
+        System.out.println("SecurityContextHolder 1");
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+        System.out.println("SecurityContextHolder 2");
+
+        // 3. 인증정보를 기반으로 JWT 토큰 생성
+        TokenRes tokenRes = tokenProvider.createToken(authentication.getName());
+        System.out.println("createToken");
+
+        // 4. RefreshToken 저장
+        RefreshToken refreshToken = RefreshToken.builder()
+                .key(authentication.getName())
+                .value(tokenRes.getRefreshToken())
+                .build();
+        refreshTokenRepository.save(refreshToken);
+        System.out.println("save");
+
+        return tokenRes;
+    }
 
 
     @Transactional  // 토큰 만료시 재발급

@@ -17,7 +17,9 @@ import java.util.Collection;
 @Entity
 public class User extends BaseTimeEntity implements UserDetails {
 
-    @Id
+    // UserDetails : 스프링 시큐리티에서 사용자의 정보를 담는 인터페이스스
+
+   @Id
     @Column(name = "user_id")
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long userId;
