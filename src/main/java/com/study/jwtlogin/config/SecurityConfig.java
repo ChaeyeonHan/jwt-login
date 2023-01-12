@@ -43,7 +43,7 @@ public class SecurityConfig {
     }
 
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 // token을 사용하는 인증 방식이기 때문에 csrf는 비활성화 상태로 둔다
                 // rest-api를 이용한 서버라면, 세션 기반과는 다르게 stateless하기에 서버에 인증정보를 보관하지 않기에 필요하지 X

@@ -28,26 +28,30 @@ import static com.study.jwtlogin.domain.Role.ROLE_USER;
 public class TokenProvider {
 
     private static final String AUTHORITIES_KEY = "auth";
+    private static final String BEARER_TYPE = "bearer";
+    private static final long ACCESS_TOKEN_EXPIRE_TIME = 1000 * 60 * 60 * 24;   // Access Token 만료 기한: 1일
+    private static final long REFRESH_TOKEN_EXPIRE_TIME = 1000 * 60 * 60 * 24 * 7;  // Refresh Token 만료 기한: 7일
 
     private Key secretKey;
 
     //시크릿 값을 decode해서 secretKey 변수에 할당
     public TokenProvider(@Value("${jwt.secret}") String jwtSecretKey) {
         byte[] keyBytes = Decoders.BASE64.decode(jwtSecretKey);
-        secretKey = Keys.hmacShaKeyFor(keyBytes);
+        this.secretKey = Keys.hmacShaKeyFor(keyBytes);
     }
 
     // 토큰 발급(TokenRes 반환)
     public TokenRes createToken(String email) {
         // 엑세스 토큰의 만료 시간 설정
         Date now = new Date();
-        Date accessTokenExpireTime = new Date(now.getTime() + JwtProperties.ACCESS_TOKEN_EXPIRE_TIME);
+        Date accessTokenExpireTime = new Date(now.getTime() + ACCESS_TOKEN_EXPIRE_TIME);
 
         return TokenRes.builder()
-                .grantType(JwtProperties.BEARER_PREFIX)  // JWT 대한 인증 타입 : Bearer
+                .grantType(BEARER_TYPE)  // JWT 대한 인증 타입 : bearer
                 .accessToken(publishAccessToken(email))
                 .accessTokenExpiresIn(accessTokenExpireTime.getTime())
-                .refreshToken(publishRefreshToken()).build();
+                .refreshToken(publishRefreshToken())
+                .build();
     }
 
     // Access Token 생성
@@ -58,10 +62,10 @@ public class TokenProvider {
                 .setSubject(email)
                 .claim(AUTHORITIES_KEY, ROLE_USER)
 //                .setIssuedAt(now)
-                .setExpiration(new Date(now.getTime() + JwtProperties.ACCESS_TOKEN_EXPIRE_TIME))  // 토큰 만료 시간 설정(1000이 1초)
 //                .signWith(SignatureAlgorithm.HS256, JwtProperties.SECRET)  // 내 서버만 아는 고유한 값
                 // -> signWith가 deprecated되어 String 값을 넣는 것이 아니라 Key를 생성해 서명을 진행
                 .signWith(secretKey, SignatureAlgorithm.HS512)
+                .setExpiration(new Date(now.getTime() + ACCESS_TOKEN_EXPIRE_TIME))  // 토큰 만료 시간 설정(1000이 1초)
                 .compact();
     }
 
@@ -69,9 +73,32 @@ public class TokenProvider {
     public String publishRefreshToken() {
         Date now = new Date();
         return Jwts.builder()
-                .setExpiration(new Date(now.getTime() + JwtProperties.REFRESH_TOKEN_EXPIRE_TIME))
+                .setExpiration(new Date(now.getTime() + REFRESH_TOKEN_EXPIRE_TIME))
                 .signWith(secretKey, SignatureAlgorithm.HS512)
                 .compact();
+    }
+
+
+    // JWT 토큰을 복호화하여 토큰에 들어있는 정보로 Authentication 객체를 리턴하는 메서드
+    public Authentication getAuthentication(String accessToken) {
+
+        Claims claims = parseClaims(accessToken);
+
+        if (claims.get(AUTHORITIES_KEY) == null) {
+            throw new RuntimeException("권한 정보가 없는 토큰입니다.");
+        }
+
+        // Claim 으로 권한 정보 가져오기
+        Collection<? extends GrantedAuthority> authorities =
+                Arrays.stream(claims.get(AUTHORITIES_KEY).toString().split(","))
+                        .map(SimpleGrantedAuthority::new)
+                        .collect(Collectors.toList());
+
+        // UserDetails 객체를 생성해서 UsernamePasswordAuthenticationToken로 리턴(SecurityContext가 Authentication 객체를 저장하기에)
+        // 디비를 거치지 않고 토큰에서 값을 꺼내 바로 시큐리티 유저 객체를 만들어 Authentication을 만들어 반환
+        User principal = new User(claims.getSubject(), "", authorities);  // UserDetails 객체를 생성 -> UsernamePasswordAuthenticationToken 형태로 리턴
+
+        return new UsernamePasswordAuthenticationToken(principal,"",authorities);
     }
 
     // 토큰의 유효성 검사
@@ -90,29 +117,6 @@ public class TokenProvider {
         }
 
         return false;
-    }
-
-    // JWT 토큰을 복호화하여 토큰에 들어있는 정보로 Authentication 객체를 리턴하는 메서드
-    public Authentication getAuthentication(String accessToken) {
-
-        Claims claims = parseClaims(accessToken);
-
-        if (claims.get(AUTHORITIES_KEY) == null) {
-            throw new RuntimeException("권한 정보가 없는 토큰입니다.");
-        }
-
-        // Claim 으로 권한 정보 가져오기
-        Collection<? extends GrantedAuthority> authorities =
-                Arrays.stream(claims.get(AUTHORITIES_KEY).toString().split(","))
-                        .map(SimpleGrantedAuthority::new)
-                        .collect(Collectors.toList());
-
-        // 권한 정보 넣지 않고 Authentication 객체 생성해 리턴하는게 맞나?
-        // UserDetails 객체를 생성해서 UsernamePasswordAuthenticationToken로 리턴(SecurityContext가 Authentication 객체를 저장하기에)
-        // 디비를 거치지 않고 토큰에서 값을 꺼내 바로 시큐리티 유저 객체를 만들어 Authentication을 만들어 반환
-        User principal = new User(claims.getSubject(), "", authorities);  // UserDetails 객체를 생성 -> UsernamePasswordAuthenticationToken 형태로 리턴
-
-        return new UsernamePasswordAuthenticationToken(principal,"",authorities);
     }
 
     // 토큰을 파라미터로 받아 클레임 생성 (토큰의 만료 여부와 상관없이 정보를 꺼낼 수 있음)

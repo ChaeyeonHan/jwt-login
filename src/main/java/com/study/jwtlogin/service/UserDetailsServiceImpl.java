@@ -9,6 +9,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -23,8 +24,11 @@ public class UserDetailsServiceImpl implements UserDetailsService {
     // 로그인 시 DB에서 유저정보를 가져오고. 이를 기반으로 Userdetails 객체 생성
 
     @Override
-    public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
+    @Transactional
+    public UserDetails loadUserByUsername(final String email) throws UsernameNotFoundException {
 //        System.out.println("loadUserByUsername 실행되니??");
+        System.out.println("====================loadUserByUsername================");
+        System.out.println(userRepository.findByEmail(email).get().getEmail());
         return userRepository.findByEmail(email)
                 .map(user -> createUserDetails(email, user))
                 .orElseThrow(() -> new UsernameNotFoundException(email + " -> 해당하는 유저를 찾을 수 없습니다."));
@@ -36,11 +40,13 @@ public class UserDetailsServiceImpl implements UserDetailsService {
         if (!user.isActivated()) {
             throw new RuntimeException(email + " -> 활성화되어 있지 않은 유저입니다.");
         }
+        System.out.println("createUserDetails 메서드 실행");
 
         List<GrantedAuthority> grantedAuthorities = new ArrayList<>();
         SimpleGrantedAuthority role = new SimpleGrantedAuthority(user.getRole().value());
         grantedAuthorities.add(role);
 
+        System.out.println("권한 생성");
         return new org.springframework.security.core.userdetails.User(user.getUsername(), user.getPassword(), grantedAuthorities);
     }
 }

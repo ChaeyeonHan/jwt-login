@@ -19,6 +19,8 @@ import java.io.IOException;
 public class JwtFilter extends GenericFilterBean {
 
     private final TokenProvider tokenProvider;
+    public static final String AUTHORIZATION_HEADER = "Authorization";
+    public static final String BEARER_PREFIX = "Bearer ";
 //    private static final Logger logger = LoggerFactory.getLogger(JwtFilter.class);
 
     // 필터링 로직 수행 부분. 토큰의 인증 정보를 SecurityContext 안에 저장하는 역할을 수행!!
@@ -54,9 +56,9 @@ public class JwtFilter extends GenericFilterBean {
     // Request Header에서 토큰 정보 추출
     private String resolveToken(HttpServletRequest request){
 
-       String bearerToken = request.getHeader(JwtProperties.AUTHORIZATION_HEADER);
+       String bearerToken = request.getHeader(AUTHORIZATION_HEADER);
 
-       if (StringUtils.hasText(bearerToken) && bearerToken.startsWith(JwtProperties.BEARER_PREFIX)) {
+       if (StringUtils.hasText(bearerToken) && bearerToken.startsWith(BEARER_PREFIX)) {
            return bearerToken.substring(7);
        }
        return null;
