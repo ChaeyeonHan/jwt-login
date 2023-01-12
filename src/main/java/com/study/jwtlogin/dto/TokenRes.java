@@ -3,7 +3,8 @@ package com.study.jwtlogin.dto;
 
 import lombok.*;
 
-@Getter @Setter@Builder
+@Data
+@Builder
 @AllArgsConstructor
 @NoArgsConstructor
 public class TokenRes {

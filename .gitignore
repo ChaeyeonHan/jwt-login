@@ -40,3 +40,7 @@ out/
 *.yml
 application.yml
 **/resources/application.yml
+#
+#### JWT ###
+#JwtProperties.java
+#**/src/main/java/com/study/jwtlogin/jwt/JwtProperties
