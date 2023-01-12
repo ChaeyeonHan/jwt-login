@@ -52,7 +52,6 @@ public class User extends BaseTimeEntity implements UserDetails {
 
     @Override
     public String getPassword() {
-//        return null;
         return getPw();
     }
 
