@@ -71,7 +71,7 @@ public class SecurityConfig {
                 .antMatchers(HttpMethod.OPTIONS).permitAll()  // Preflight Request 허용
                 // Preflight Request : 실질적인 요청 전 OPTIONS 메소드를 통해 사전에 요청이 안전한지 확인하는 방법
 
-                .antMatchers("/", "/h2/**", "/test/form-login", "/test/auth", "/test/signup").permitAll()
+                .antMatchers("/", "/h2/**", "/auth/**").permitAll()
                 .anyRequest().authenticated()
 
                 // JwtFilter를

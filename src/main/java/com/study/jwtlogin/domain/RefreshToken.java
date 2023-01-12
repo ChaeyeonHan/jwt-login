@@ -23,4 +23,10 @@ public class RefreshToken {
    @Column(name = "refresh_token_value", nullable = false)
     private String value;  // 리프레시 토큰 값
 
+    // 리프레시 토큰 재발급 뒤 업데이트
+    public RefreshToken updateToken(String token) {
+        this.value = token;
+        return this;
+    }
+
 }
