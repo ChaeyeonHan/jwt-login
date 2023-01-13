@@ -26,8 +26,8 @@ public class UserDetailsServiceImpl implements UserDetailsService {
     @Override
     @Transactional
     public UserDetails loadUserByUsername(final String email) throws UsernameNotFoundException {
-        System.out.println("====================loadUserByUsername================");
-        System.out.println(userRepository.findByEmail(email).get().getEmail());
+//        System.out.println("====================loadUserByUsername================");
+//        System.out.println(userRepository.findByEmail(email).get().getEmail());
         return userRepository.findByEmail(email)
                 .map(user -> createUserDetails(email, user))
                 .orElseThrow(() -> new UsernameNotFoundException(email + " -> 해당하는 유저를 찾을 수 없습니다."));
@@ -39,26 +39,25 @@ public class UserDetailsServiceImpl implements UserDetailsService {
         if (!user.isActivated()) {
             throw new RuntimeException(username + " -> 활성화되어 있지 않습니다.");
         }
-        System.out.println("createUserDetails 메서드 실행");
+//        System.out.println("createUserDetails 메서드 실행");
 
         List<GrantedAuthority> grantedAuthorities = new ArrayList<>();
         SimpleGrantedAuthority role = new SimpleGrantedAuthority(user.getRole().value());
         grantedAuthorities.add(role);
-        System.out.println("권한 생성");
+//        System.out.println("권한 생성");
 
         try {
-            System.out.println("try안으로 들어옴.");
+//            System.out.println("try안으로 들어옴.");
             org.springframework.security.core.userdetails.User user1 = new org.springframework.security.core.userdetails.User(user.getUsername(), user.getPassword(), grantedAuthorities);
 
-            System.out.println(user1.getUsername());
-            System.out.println(user1.getPassword());
-            System.out.println("UserDetails 객체 생성 완료");
+//            System.out.println(user1.getUsername());
+//            System.out.println(user1.getPassword());
+//            System.out.println("UserDetails 객체 생성 완료");
             return user1;
 
         } catch (Exception e) {
             e.printStackTrace();
         }
-        System.out.println("try-catch 밖으로 나옴");
         return null;
     }
 }

@@ -31,10 +31,7 @@ public class AuthService {
     public TokenRes login(LoginRequestDto loginRequestDto) {
 
         // 1. 로그인한 email/password 를 기반으로 AuthenticationToken 생성
-//        UsernamePasswordAuthenticationToken authenticationToken = loginRequestDto.toAuthenticate();
-        UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(loginRequestDto.getEmail(), loginRequestDto.getPassword());
-
-        System.out.println("UsernamePasswordAuthenticationToken");
+        UsernamePasswordAuthenticationToken authenticationToken = loginRequestDto.toAuthenticate();
 
         // 2. 사용자 비밀번호 체크가 진행된다.(여기서 loadUserByUsername 메소드가 실행된다)
         // UsernamePasswordAuthenticationToken 객체로 Authentication 객체 생성
@@ -49,7 +46,6 @@ public class AuthService {
 
         // 3. 인증정보를 기반으로 JWT 토큰 생성
         TokenRes tokenRes = tokenProvider.createToken(authentication.getName());
-        System.out.println("createToken");
 
         // 4. RefreshToken 저장
         RefreshToken refreshToken = RefreshToken.builder()
@@ -57,7 +53,6 @@ public class AuthService {
                 .value(tokenRes.getRefreshToken())
                 .build();
         refreshTokenRepository.save(refreshToken);
-        System.out.println("save");
 
         return tokenRes;
     }

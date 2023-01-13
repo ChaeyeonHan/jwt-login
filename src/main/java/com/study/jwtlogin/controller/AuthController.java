@@ -36,19 +36,11 @@ public class AuthController {
         TokenRes res = authService.login(loginDto);
 //        HttpHeaders header = new HttpHeaders();
 //        header.add(JwtProperties.AUTHORIZATION_HEADER, "Bearer " + res.getAccessToken());
-        System.out.println("authService.login");
+
+        System.out.println(loginDto.getEmail() + "의 유저 로그인 완료");
+
         return new ResponseEntity<>(res,null, HttpStatus.OK);  // 바디, 헤더, 상태코드
     }
-
-//    @GetMapping("/form-login")
-//    public ResponseEntity<TokenRes> formLogin(@Valid @RequestBody LoginRequestDto loginDto) {
-//
-//        Authentication authentication = authService.authenticate(loginDto); // 인증
-//        TokenRes tokenDto = authService.authorize(authentication); // 인가, 토큰발행
-//        HttpHeaders headers = authService.inputTokenInHeader(tokenDto); // 토큰 헤더에 넣기
-//
-//        return new ResponseEntity<>(tokenDto, headers, HttpStatus.OK);
-//    }
 
     @PostMapping("/reissue")  // 토큰 재발급 API
     public void reissue(@RequestBody TokenRequestDto tokenRequestDto) {

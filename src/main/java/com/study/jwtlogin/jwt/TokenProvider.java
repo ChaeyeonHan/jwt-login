@@ -29,8 +29,6 @@ public class TokenProvider {
 
     private static final String AUTHORITIES_KEY = "auth";
     private static final String BEARER_TYPE = "bearer";
-    private static final long ACCESS_TOKEN_EXPIRE_TIME = 1000 * 60 * 60 * 24;   // Access Token 만료 기한: 1일
-    private static final long REFRESH_TOKEN_EXPIRE_TIME = 1000 * 60 * 60 * 24 * 7;  // Refresh Token 만료 기한: 7일
 
     private Key secretKey;
 
@@ -44,7 +42,7 @@ public class TokenProvider {
     public TokenRes createToken(String email) {
         // 엑세스 토큰의 만료 시간 설정
         Date now = new Date();
-        Date accessTokenExpireTime = new Date(now.getTime() + ACCESS_TOKEN_EXPIRE_TIME);
+        Date accessTokenExpireTime = new Date(now.getTime() + JwtProperties.ACCESS_TOKEN_EXPIRE_TIME);
 
         return TokenRes.builder()
                 .grantType(BEARER_TYPE)  // JWT 대한 인증 타입 : bearer
@@ -65,7 +63,7 @@ public class TokenProvider {
 //                .signWith(SignatureAlgorithm.HS256, JwtProperties.SECRET)  // 내 서버만 아는 고유한 값
                 // -> signWith가 deprecated되어 String 값을 넣는 것이 아니라 Key를 생성해 서명을 진행
                 .signWith(secretKey, SignatureAlgorithm.HS512)
-                .setExpiration(new Date(now.getTime() + ACCESS_TOKEN_EXPIRE_TIME))  // 토큰 만료 시간 설정(1000이 1초)
+                .setExpiration(new Date(now.getTime() + JwtProperties.ACCESS_TOKEN_EXPIRE_TIME))  // 토큰 만료 시간 설정(1000이 1초)
                 .compact();
     }
 
@@ -73,7 +71,7 @@ public class TokenProvider {
     public String publishRefreshToken() {
         Date now = new Date();
         return Jwts.builder()
-                .setExpiration(new Date(now.getTime() + REFRESH_TOKEN_EXPIRE_TIME))
+                .setExpiration(new Date(now.getTime() + JwtProperties.REFRESH_TOKEN_EXPIRE_TIME))
                 .signWith(secretKey, SignatureAlgorithm.HS512)
                 .compact();
     }
