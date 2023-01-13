@@ -30,7 +30,22 @@ public class AuthService {
     @Transactional
     public TokenRes login(LoginRequestDto loginRequestDto) {
 
-        Authentication authentication = authenticate(loginRequestDto);
+        // 1. 로그인한 email/password 를 기반으로 AuthenticationToken 생성
+//        UsernamePasswordAuthenticationToken authenticationToken = loginRequestDto.toAuthenticate();
+        UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(loginRequestDto.getEmail(), loginRequestDto.getPassword());
+
+        System.out.println("UsernamePasswordAuthenticationToken");
+
+        // 2. 사용자 비밀번호 체크가 진행된다.(여기서 loadUserByUsername 메소드가 실행된다)
+        // UsernamePasswordAuthenticationToken 객체로 Authentication 객체 생성
+        Authentication authentication = authenticationManagerBuilder.getObject().authenticate(authenticationToken);
+//        System.out.println("====================Authentication======================");
+//        System.out.println(authentication.getName());  // test2@naver.com
+//        System.out.println(authentication.getPrincipal());  // org.springframework.security.core.userdetails.User [Username=test2@naver.com, Password=[PROTECTED], Enabled=true, AccountNonExpired=true, credentialsNonExpired=true, AccountNonLocked=true, Granted Authorities=[ROLE_USER]]
+//        System.out.println("SecurityContextHolder 1");
+
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+
 
         // 3. 인증정보를 기반으로 JWT 토큰 생성
         TokenRes tokenRes = tokenProvider.createToken(authentication.getName());
@@ -47,75 +62,6 @@ public class AuthService {
         return tokenRes;
     }
 
-    // 로그인한 email/password 를 기반으로 AuthenticationToken 생성해서, SecurityContext에 저장
-    @Transactional
-    public Authentication authenticate(LoginRequestDto loginRequestDto) {
-
-        // 1. 로그인한 email/password 를 기반으로 AuthenticationToken 생성
-        UsernamePasswordAuthenticationToken authenticationToken = loginRequestDto.toAuthenticate();
-        System.out.println("UsernamePasswordAuthenticationToken");
-        System.out.println("=========================");
-        System.out.println(authenticationToken.getName());  // 로그인한 유저의 이메일 출력
-        System.out.println("=========================");
-
-
-        // 2. 사용자 비밀번호 체크가 진행된다.(여기서 loadUserByUsername 메소드가 실행된다)
-        // UsernamePasswordAuthenticationToken 객체로 Authentication 객체 생성
-        Authentication authentication = authenticationManagerBuilder.getObject().authenticate(authenticationToken);
-//        System.out.println("====================Authentication======================");
-//        System.out.println(authentication.getName());  // test2@naver.com
-//        System.out.println(authentication.getPrincipal());  // org.springframework.security.core.userdetails.User [Username=test2@naver.com, Password=[PROTECTED], Enabled=true, AccountNonExpired=true, credentialsNonExpired=true, AccountNonLocked=true, Granted Authorities=[ROLE_USER]]
-//        System.out.println("SecurityContextHolder 1");
-//
-
-        SecurityContextHolder.getContext().setAuthentication(authentication);
-        return authentication;
-    }
-
-    // Authencation 객체를 만들어 인증한 뒤, Context에 저장
-//    @Transactional
-//    public Authentication authenticate(LoginRequestDto loginDto) {
-//        UsernamePasswordAuthenticationToken authenticationToken =
-//                new UsernamePasswordAuthenticationToken(loginDto.getEmail(), loginDto.getPassword());
-//        System.out.println("UsernamePasswordAuthenticationToken");
-//
-//        Authentication authentication = authenticationManagerBuilder.getObject().authenticate(authenticationToken);
-//        System.out.println(authentication);
-//
-//        System.out.println("====================Authentication======================");
-//        System.out.println(authentication.getName());  // test2@naver.com
-//        System.out.println(authentication.getPrincipal());  // org.springframework.security.core.userdetails.User [Username=test2@naver.com, Password=[PROTECTED], Enabled=true, AccountNonExpired=true, credentialsNonExpired=true, AccountNonLocked=true, Granted Authorities=[ROLE_USER]]
-//        System.out.println("SecurityContextHolder 1");
-//        SecurityContextHolder.getContext().setAuthentication(authentication);
-//        System.out.println("SecurityContextHolder 2");
-//        return authentication;
-//    }
-//
-//    // 토큰 발행으로 인가
-//    @Transactional
-//    public TokenRes authorize(Authentication authentication) {
-//
-//        TokenRes tokenDto = tokenProvider.createToken(authentication.getName());
-//
-//        RefreshToken refreshToken = RefreshToken.builder()
-//                .key(authentication.getName())
-//                .value(tokenDto.getRefreshToken())
-//                .build();
-//        System.out.println("RefreshToken");
-//
-//        refreshTokenRepository.save(refreshToken);
-//
-//        return tokenDto;
-//    }
-//
-//    @Transactional
-//    public HttpHeaders inputTokenInHeader(TokenRes tokenDto) {
-//        HttpHeaders httpHeaders = new HttpHeaders();
-//        httpHeaders.add(JwtFilter.AUTHORIZATION_HEADER, "Bearer " + tokenDto.getAccessToken());
-//        System.out.println("header");
-//
-//        return httpHeaders;
-//    }
 
 
     @Transactional  // 토큰 만료시 재발급

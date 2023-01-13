@@ -26,7 +26,6 @@ public class UserDetailsServiceImpl implements UserDetailsService {
     @Override
     @Transactional
     public UserDetails loadUserByUsername(final String email) throws UsernameNotFoundException {
-//        System.out.println("loadUserByUsername 실행되니??");
         System.out.println("====================loadUserByUsername================");
         System.out.println(userRepository.findByEmail(email).get().getEmail());
         return userRepository.findByEmail(email)
@@ -36,17 +35,30 @@ public class UserDetailsServiceImpl implements UserDetailsService {
     }
 
     // DB에 해당 이메일로 가입한 유저가 있다면 UserDetails 객체로 만들어서 리턴
-    private UserDetails createUserDetails(String email, User user) {
+    private UserDetails createUserDetails(String username, User user) {
         if (!user.isActivated()) {
-            throw new RuntimeException(email + " -> 활성화되어 있지 않은 유저입니다.");
+            throw new RuntimeException(username + " -> 활성화되어 있지 않습니다.");
         }
         System.out.println("createUserDetails 메서드 실행");
 
         List<GrantedAuthority> grantedAuthorities = new ArrayList<>();
         SimpleGrantedAuthority role = new SimpleGrantedAuthority(user.getRole().value());
         grantedAuthorities.add(role);
-
         System.out.println("권한 생성");
-        return new org.springframework.security.core.userdetails.User(user.getUsername(), user.getPassword(), grantedAuthorities);
+
+        try {
+            System.out.println("try안으로 들어옴.");
+            org.springframework.security.core.userdetails.User user1 = new org.springframework.security.core.userdetails.User(user.getUsername(), user.getPassword(), grantedAuthorities);
+
+            System.out.println(user1.getUsername());
+            System.out.println(user1.getPassword());
+            System.out.println("UserDetails 객체 생성 완료");
+            return user1;
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        System.out.println("try-catch 밖으로 나옴");
+        return null;
     }
 }

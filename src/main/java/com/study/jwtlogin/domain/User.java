@@ -14,10 +14,9 @@ import java.util.Collection;
 @Getter
 @Entity
 public class User extends BaseTimeEntity implements UserDetails {
+    // UserDetails : 스프링 시큐리티에서 사용자의 정보를 담는 인터페이스
 
-    // UserDetails : 스프링 시큐리티에서 사용자의 정보를 담는 인터페이스스
-
-   @Id
+    @Id
     @Column(name = "user_id")
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long userId;
@@ -41,6 +40,7 @@ public class User extends BaseTimeEntity implements UserDetails {
 
 
     // UserDetails 상속 //
+
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         Collection<GrantedAuthority> authorities = new ArrayList<>();
@@ -52,13 +52,12 @@ public class User extends BaseTimeEntity implements UserDetails {
 
     @Override
     public String getPassword() {
-        return getPw();
+        return this.getPw();
     }
-
 
     @Override
     public String getUsername() {
-        return null;
+        return this.getEmail();
     }
 
     @Override
@@ -80,6 +79,4 @@ public class User extends BaseTimeEntity implements UserDetails {
     public boolean isEnabled() {
         return false;
     }
-
-
 }
