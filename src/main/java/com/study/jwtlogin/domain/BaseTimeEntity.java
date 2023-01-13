@@ -29,4 +29,15 @@ public class BaseTimeEntity {
     // LocalDateTime : 날짜와 시간 정보가 모두 필요할 때 (2022-11-12T12:32:22.000003333)
     // LocalDate : 날짜 정보만 (2022-10-9)
 
+     @PrePersist  // 엔티티가 비영속 -> 영속 상태가 되는 시점 이전에 실행됨
+     public void onPrePersist() {
+          this.createdAt = LocalDateTime.now();
+          this.modifiedAt = this.createdAt;
+     }
+
+     @PreUpdate  // 영속상태의 엔티티를 데이터 업데이트 수행 이전에 실행됨
+     public void onPreUpdate() {
+          this.modifiedAt = LocalDateTime.now();
+     }
+
 }
